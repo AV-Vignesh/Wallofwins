@@ -440,6 +440,15 @@ const fmt=n=>'₹'+Number(n||0).toLocaleString('en-IN');
 const esc=s=>(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmtDate=d=>{ if(!d) return ''; const dt=new Date(d+'T00:00:00'); return isNaN(dt)?d:dt.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) };
 
+/* ================= TOAST ================= */
+let toastTimer;
+function toast(msg){
+  const t=$('toast'); if(!t) return;
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),3000);
+}
+
 /* ================= THEME ================= */
 function setTheme(t){
   document.documentElement.dataset.theme=t;
@@ -572,9 +581,14 @@ $('saveBtn').onclick=()=>{
     amount:$('fMoneyType').value==='none'?0:Number($('fAmount').value||0),
     photo:currentPhoto||null
   };
-  if(editingId){ Object.assign(entries.find(e=>e.id===editingId), data); toast('Updated ✓'); }
-  else { entries.push({id:'w'+Date.now()+Math.random().toString(36).slice(2,6), ...data}); confetti(); toast('Another win on the wall! 🎉'); }
-  persist(); $('entryOverlay').classList.remove('show'); render();
+  const isNew=!editingId;
+  if(editingId){ Object.assign(entries.find(e=>e.id===editingId), data); }
+  else { entries.push({id:'w'+Date.now()+Math.random().toString(36).slice(2,6), ...data}); }
+  persist();                                  /* save first */
+  $('entryOverlay').classList.remove('show'); /* close second */
+  render();
+  try{ if(isNew) confetti(); }catch(e){}      /* celebration last — never blocks */
+  toast(isNew?'Another win on the wall! 🎉':'Updated ✓');
 };
 
 /* ================= PHOTO (compressed to localStorage) ================= */
@@ -650,12 +664,13 @@ $('aiFillBtn').onclick=async()=>{
     if(parsed.story) $('fStory').value=parsed.story;
     if(parsed.date && /^\d{4}-\d{2}-\d{2}$/.test(parsed.date)) $('fDate').value=parsed.date;
     if(parsed.category){ const sel=$('fCategory'); if([...sel.options].some(o=>o.value===parsed.category)) sel.value=parsed.category; }
-    toast('Auto-filled — tweak & save ✨');
+    toast(parsed.date?'Auto-filled — tweak & save ✨':'Auto-filled (no date visible in photo — set it yourself) ✨');
   }catch(err){
     console.error(err);
     toast(err.friendly||'Auto-fill failed — check your settings / network');
+  }finally{
+    btn.disabled=false; setAiBtnLabel();
   }
-  btn.disabled=false; setAiBtnLabel();
 };
 
 function setAiBtnLabel(){
