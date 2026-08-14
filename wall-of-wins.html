@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="jazz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wall of Wins</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Space+Grotesk:wght@400;500;700&family=Caveat:wght@600&display=swap" rel="stylesheet">
+<style>
+/* ============ THEME TOKENS ============ */
+:root{
+  --radius:18px;
+  --font-display:'Fraunces',serif;
+  --font-body:'Space Grotesk',sans-serif;
+  --font-hand:'Caveat',cursive;
+}
+[data-theme="trophy"]{
+  --bg:#12141c; --bg2:#1a1d29; --card:#1f2333; --card-edge:#2c3148;
+  --text:#f0ead8; --muted:#9b93a8;
+  --accent:#d4af37; --accent2:#f1d576; --accent-ink:#1a1405;
+  --gain:#7fd8a4; --spend:#e8b46a;
+  --shadow:0 10px 34px rgba(0,0,0,.45);
+  --glow:0 0 0 1px rgba(212,175,55,.25), 0 8px 30px rgba(212,175,55,.10);
+  --chip:#2a2f45;
+}
+[data-theme="sunshine"]{
+  --bg:#fdf6ec; --bg2:#faeeda; --card:#ffffff; --card-edge:#f0e2cc;
+  --text:#3d2f24; --muted:#96826d;
+  --accent:#f27649; --accent2:#f7a23b; --accent-ink:#fff;
+  --gain:#2fa87a; --spend:#e0812f;
+  --shadow:0 8px 24px rgba(160,120,70,.16);
+  --glow:0 0 0 1px rgba(242,118,73,.20), 0 8px 26px rgba(242,118,73,.12);
+  --chip:#f6ead6;
+}
+[data-theme="jazz"]{
+  --bg:#170f26; --bg2:#1f1433; --card:#251a3d; --card-edge:#382a58;
+  --text:#f4eefc; --muted:#a293c4;
+  --accent:#ff4f9a; --accent2:#ffb347; --accent-ink:#2a0818;
+  --gain:#5fe3b3; --spend:#ffb347;
+  --shadow:0 12px 36px rgba(0,0,0,.5);
+  --glow:0 0 0 1px rgba(255,79,154,.3), 0 8px 34px rgba(255,79,154,.16);
+  --chip:#332452;
+}
+
+/* ============ BASE ============ */
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg); color:var(--text);
+  font-family:var(--font-body); min-height:100vh;
+  transition:background .4s ease, color .4s ease;
+}
+[data-theme="jazz"] body{
+  background:radial-gradient(1100px 600px at 85% -10%, rgba(255,79,154,.14), transparent 60%),
+             radial-gradient(900px 500px at -10% 110%, rgba(255,179,71,.10), transparent 55%), var(--bg);
+}
+[data-theme="trophy"] body{
+  background:radial-gradient(900px 500px at 50% -15%, rgba(212,175,55,.10), transparent 60%), var(--bg);
+}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,textarea,select{font-family:inherit;font-size:1rem;color:var(--text)}
+
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px 90px}
+
+/* ============ HEADER ============ */
+header{padding:34px 0 10px;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px}
+h1{font-family:var(--font-display);font-weight:800;font-size:clamp(2rem,5vw,3.1rem);line-height:1.05}
+h1 em{font-style:normal;background:linear-gradient(100deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.tagline{color:var(--muted);margin-top:6px;font-size:.95rem}
+
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.icon-btn{
+  background:var(--card);border:1px solid var(--card-edge);border-radius:12px;
+  padding:9px 13px;font-size:.88rem;font-weight:500;display:flex;align-items:center;gap:6px;
+  transition:transform .15s, box-shadow .2s;
+}
+.icon-btn:hover{transform:translateY(-2px);box-shadow:var(--glow)}
+.theme-dots{display:flex;gap:7px;background:var(--card);border:1px solid var(--card-edge);border-radius:12px;padding:9px 12px}
+.theme-dot{width:20px;height:20px;border-radius:50%;border:2px solid transparent;transition:transform .15s}
+.theme-dot:hover{transform:scale(1.2)}
+.theme-dot.active{border-color:var(--text)}
+.dot-trophy{background:linear-gradient(135deg,#1a1d29 50%,#d4af37 50%)}
+.dot-sunshine{background:linear-gradient(135deg,#fdf6ec 50%,#f27649 50%)}
+.dot-jazz{background:linear-gradient(135deg,#170f26 50%,#ff4f9a 50%)}
+
+/* ============ STATS ============ */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:22px 0 8px}
+.stat{
+  background:var(--card);border:1px solid var(--card-edge);border-radius:var(--radius);
+  padding:18px 20px;box-shadow:var(--shadow);
+}
+.stat .num{font-family:var(--font-display);font-size:1.9rem;font-weight:800}
+.stat .lbl{color:var(--muted);font-size:.82rem;margin-top:2px;letter-spacing:.02em}
+.stat.gain .num{color:var(--gain)}
+.stat.spend .num{color:var(--spend)}
+
+/* ============ SPOTLIGHT ============ */
+.spotlight{
+  margin:22px 0;border-radius:calc(var(--radius) + 6px);padding:26px 28px;position:relative;overflow:hidden;
+  background:linear-gradient(120deg,var(--card),var(--bg2));
+  border:1px solid var(--card-edge);box-shadow:var(--glow);
+  display:none;
+}
+.spotlight.show{display:flex;gap:22px;align-items:center;flex-wrap:wrap}
+.spotlight .badge{
+  position:absolute;top:14px;right:16px;font-family:var(--font-hand);font-size:1.15rem;color:var(--accent2);
+  transform:rotate(3deg);
+}
+.spotlight img{width:130px;height:130px;object-fit:cover;border-radius:14px;box-shadow:var(--shadow)}
+.spotlight .sp-title{font-family:var(--font-display);font-size:1.45rem;font-weight:800;margin-bottom:5px}
+.spotlight .sp-story{color:var(--muted);max-width:56ch;line-height:1.5}
+.spotlight .sp-meta{margin-top:8px;font-size:.85rem;color:var(--accent)}
+.spotlight .shuffle{margin-top:10px;font-size:.82rem;color:var(--muted);text-decoration:underline;text-underline-offset:3px}
+.spotlight .shuffle:hover{color:var(--accent)}
+
+/* ============ CONTROLS ROW ============ */
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:20px 0 18px}
+.add-btn{
+  background:linear-gradient(100deg,var(--accent),var(--accent2));color:var(--accent-ink);
+  font-weight:700;font-size:1rem;padding:13px 24px;border-radius:14px;
+  box-shadow:var(--glow);transition:transform .15s;
+}
+.add-btn:hover{transform:translateY(-2px) scale(1.02)}
+.seg{display:flex;background:var(--card);border:1px solid var(--card-edge);border-radius:12px;overflow:hidden}
+.seg button{padding:10px 16px;font-size:.86rem;color:var(--muted)}
+.seg button.on{background:var(--chip);color:var(--text);font-weight:600}
+#search{
+  flex:1;min-width:170px;background:var(--card);border:1px solid var(--card-edge);border-radius:12px;
+  padding:11px 15px;outline:none;
+}
+#search::placeholder{color:var(--muted)}
+#search:focus{box-shadow:var(--glow)}
+
+/* ============ GRID VIEW ============ */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:18px}
+.card{
+  background:var(--card);border:1px solid var(--card-edge);border-radius:var(--radius);
+  overflow:hidden;box-shadow:var(--shadow);display:flex;flex-direction:column;
+  transition:transform .18s, box-shadow .25s;position:relative;
+}
+.card:hover{transform:translateY(-5px);box-shadow:var(--glow)}
+[data-theme="sunshine"] .card:nth-child(odd){transform:rotate(-.7deg)}
+[data-theme="sunshine"] .card:nth-child(even){transform:rotate(.7deg)}
+[data-theme="sunshine"] .card:hover{transform:rotate(0) translateY(-5px)}
+.card img{width:100%;height:165px;object-fit:cover}
+.card .body{padding:16px 17px 15px;display:flex;flex-direction:column;gap:8px;flex:1}
+.card h3{font-family:var(--font-display);font-size:1.12rem;font-weight:800;line-height:1.25}
+.card .story{color:var(--muted);font-size:.88rem;line-height:1.45;flex:1}
+.card .meta{display:flex;flex-wrap:wrap;gap:7px;align-items:center;font-size:.78rem}
+.chip{background:var(--chip);border-radius:999px;padding:4px 11px;color:var(--muted)}
+.chip.cat{color:var(--accent2);font-weight:600}
+.money{font-weight:700}
+.money.gain{color:var(--gain)}
+.money.spend{color:var(--spend)}
+.card .actions{position:absolute;top:10px;right:10px;display:flex;gap:6px;opacity:0;transition:opacity .18s}
+.card:hover .actions{opacity:1}
+.card .actions button{
+  background:rgba(0,0,0,.55);color:#fff;border-radius:9px;padding:5px 9px;font-size:.8rem;backdrop-filter:blur(4px);
+}
+[data-theme="sunshine"] .card .actions button{background:rgba(61,47,36,.75)}
+
+/* ============ TIMELINE VIEW ============ */
+.timeline{position:relative;padding-left:34px;display:none}
+.timeline.show{display:block}
+.timeline::before{content:"";position:absolute;left:11px;top:6px;bottom:6px;width:3px;border-radius:3px;
+  background:linear-gradient(var(--accent),var(--accent2))}
+.t-item{position:relative;margin-bottom:22px;background:var(--card);border:1px solid var(--card-edge);
+  border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow)}
+.t-item::before{content:"";position:absolute;left:-30px;top:22px;width:15px;height:15px;border-radius:50%;
+  background:var(--accent);box-shadow:0 0 0 4px var(--bg)}
+.t-item .t-date{font-size:.78rem;color:var(--accent);font-weight:700;letter-spacing:.04em}
+.t-item h3{font-family:var(--font-display);font-size:1.15rem;margin:4px 0 5px}
+.t-item .story{color:var(--muted);font-size:.9rem;line-height:1.45}
+.t-item .meta{margin-top:9px;display:flex;gap:8px;flex-wrap:wrap;font-size:.78rem;align-items:center}
+.t-item img{float:right;width:84px;height:84px;object-fit:cover;border-radius:12px;margin-left:14px}
+.t-item .actions{margin-top:9px;display:flex;gap:10px}
+.t-item .actions button{font-size:.8rem;color:var(--muted);text-decoration:underline;text-underline-offset:3px}
+.t-item .actions button:hover{color:var(--accent)}
+
+/* ============ EMPTY STATE ============ */
+.empty{
+  text-align:center;padding:70px 20px;border:2px dashed var(--card-edge);border-radius:var(--radius);
+  color:var(--muted);display:none;
+}
+.empty.show{display:block}
+.empty .big{font-size:3rem;margin-bottom:12px}
+.empty p{max-width:44ch;margin:0 auto;line-height:1.5}
+
+/* ============ MODAL ============ */
+.overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(5px);
+  display:none;align-items:flex-start;justify-content:center;z-index:50;overflow-y:auto;padding:34px 16px;
+}
+.overlay.show{display:flex}
+.modal{
+  background:var(--bg2);border:1px solid var(--card-edge);border-radius:22px;
+  width:100%;max-width:560px;padding:28px;box-shadow:var(--shadow);
+}
+.modal h2{font-family:var(--font-display);font-size:1.55rem;margin-bottom:18px}
+.field{margin-bottom:15px}
+.field label{display:block;font-size:.82rem;color:var(--muted);margin-bottom:6px;font-weight:600;letter-spacing:.02em}
+.field input,.field textarea,.field select{
+  width:100%;background:var(--card);border:1px solid var(--card-edge);border-radius:12px;
+  padding:11px 14px;outline:none;
+}
+.field input:focus,.field textarea:focus,.field select:focus{box-shadow:var(--glow)}
+.field textarea{resize:vertical;min-height:84px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.photo-zone{
+  border:2px dashed var(--card-edge);border-radius:14px;padding:16px;text-align:center;color:var(--muted);
+  font-size:.88rem;transition:border-color .2s;cursor:pointer;
+}
+.photo-zone:hover{border-color:var(--accent)}
+.photo-zone img{max-width:100%;max-height:190px;border-radius:10px;margin-top:10px}
+.ai-btn{
+  margin-top:10px;background:var(--chip);border:1px solid var(--card-edge);border-radius:11px;
+  padding:9px 15px;font-size:.85rem;font-weight:600;color:var(--accent2);width:100%;
+}
+.ai-btn:hover{box-shadow:var(--glow)}
+.ai-btn:disabled{opacity:.5;cursor:wait}
+.modal .btns{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+.btn-plain{padding:11px 20px;border-radius:12px;color:var(--muted);border:1px solid var(--card-edge)}
+.btn-primary{
+  padding:11px 24px;border-radius:12px;font-weight:700;color:var(--accent-ink);
+  background:linear-gradient(100deg,var(--accent),var(--accent2));
+}
+.hint{font-size:.78rem;color:var(--muted);margin-top:6px;line-height:1.4}
+.hint a{color:var(--accent)}
+
+/* ============ TOAST ============ */
+#toast{
+  position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--card);border:1px solid var(--card-edge);border-radius:13px;padding:12px 22px;
+  box-shadow:var(--glow);font-size:.9rem;transition:transform .3s;z-index:70;max-width:88vw;text-align:center;
+}
+#toast.show{transform:translateX(-50%) translateY(0)}
+
+/* ============ CONFETTI ============ */
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:90}
+
+footer{margin-top:46px;text-align:center;color:var(--muted);font-size:.8rem}
+footer .hand{font-family:var(--font-hand);font-size:1.25rem;color:var(--accent)}
+
+@media(max-width:560px){
+  .row2{grid-template-columns:1fr}
+  .spotlight img{width:100%;height:170px}
+  .card .actions{opacity:1}
+}
+@media (prefers-reduced-motion: reduce){
+  *{transition:none !important;animation:none !important}
+}
+</style>
+</head>
+<body>
+<canvas id="confetti"></canvas>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Wall of <em>Wins</em></h1>
+      <div class="tagline">Every good thing you've ever done, in one place.</div>
+    </div>
+    <div class="toolbar">
+      <div class="theme-dots" title="Switch theme">
+        <button class="theme-dot dot-trophy" data-set-theme="trophy" title="Trophy Room" aria-label="Trophy Room theme"></button>
+        <button class="theme-dot dot-sunshine" data-set-theme="sunshine" title="Sunshine Scrapbook" aria-label="Sunshine Scrapbook theme"></button>
+        <button class="theme-dot dot-jazz" data-set-theme="jazz" title="Jazz Club" aria-label="Jazz Club theme"></button>
+      </div>
+      <button class="icon-btn" id="settingsBtn">⚙ Settings</button>
+      <button class="icon-btn" id="exportBtn">⇩ Backup</button>
+      <button class="icon-btn" id="importBtn">⇪ Restore</button>
+      <input type="file" id="importFile" accept=".json" hidden>
+    </div>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><div class="num" id="statCount">0</div><div class="lbl">wins collected</div></div>
+    <div class="stat spend"><div class="num" id="statSpent">₹0</div><div class="lbl">invested in yourself</div></div>
+    <div class="stat gain"><div class="num" id="statGained">₹0</div><div class="lbl">gained along the way</div></div>
+  </div>
+
+  <div class="spotlight" id="spotlight">
+    <span class="badge">remember this?</span>
+    <img id="spImg" alt="" style="display:none">
+    <div>
+      <div class="sp-title" id="spTitle"></div>
+      <div class="sp-story" id="spStory"></div>
+      <div class="sp-meta" id="spMeta"></div>
+      <button class="shuffle" id="spShuffle">show me another one</button>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="add-btn" id="addBtn">+ Add a win</button>
+    <div class="seg">
+      <button id="viewGrid" class="on">Cards</button>
+      <button id="viewTimeline">Timeline</button>
+    </div>
+    <input id="search" placeholder="Search your wins…">
+  </div>
+
+  <div class="empty" id="empty">
+    <div class="big">🏆</div>
+    <p><strong>Your wall is waiting.</strong><br>Add your first win — big or small, old or new. That certificate from school counts. So does the fig tree that finally fruited.</p>
+  </div>
+
+  <div class="grid" id="grid"></div>
+  <div class="timeline" id="timeline"></div>
+
+  <footer>
+    <div class="hand">you did all of this. 🎉</div>
+    <div style="margin-top:6px">Data lives in this browser (localStorage). Use Backup regularly to keep a JSON copy safe.</div>
+  </footer>
+</div>
+
+<!-- ============ ADD/EDIT MODAL ============ -->
+<div class="overlay" id="entryOverlay">
+  <div class="modal">
+    <h2 id="modalTitle">Add a win</h2>
+
+    <div class="field">
+      <div class="photo-zone" id="photoZone">
+        <span id="photoHint">📷 Tap to add a photo (optional)</span>
+        <img id="photoPreview" style="display:none" alt="preview">
+      </div>
+      <input type="file" id="photoInput" accept="image/*" capture="environment" hidden>
+      <button class="ai-btn" id="aiFillBtn" style="display:none">✨ Auto-fill from photo (Gemini)</button>
+    </div>
+
+    <div class="field">
+      <label for="fTitle">What did you achieve?</label>
+      <input id="fTitle" placeholder="e.g., Presented AI Agent talk to 100 people">
+    </div>
+
+    <div class="field">
+      <label for="fStory">The story (why it made you proud)</label>
+      <textarea id="fStory" placeholder="A line or two. Future-you will thank present-you."></textarea>
+    </div>
+
+    <div class="row2">
+      <div class="field">
+        <label for="fDate">When</label>
+        <input id="fDate" type="date">
+      </div>
+      <div class="field">
+        <label for="fCategory">Category</label>
+        <select id="fCategory">
+          <option>Career</option><option>Learning</option><option>Money</option>
+          <option>Family</option><option>Health</option><option>Travel</option>
+          <option>Garden</option><option>Personal</option><option>Other</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row2">
+      <div class="field">
+        <label for="fMoneyType">Money involved?</label>
+        <select id="fMoneyType">
+          <option value="none">No money angle</option>
+          <option value="spend">I invested / spent ₹</option>
+          <option value="gain">I gained / earned ₹</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="fAmount">Amount (₹)</label>
+        <input id="fAmount" type="number" min="0" step="1" placeholder="0" disabled>
+      </div>
+    </div>
+
+    <div class="btns">
+      <button class="btn-plain" id="cancelBtn">Cancel</button>
+      <button class="btn-primary" id="saveBtn">Save win</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SETTINGS MODAL ============ -->
+<div class="overlay" id="settingsOverlay">
+  <div class="modal">
+    <h2>Settings</h2>
+    <div class="field">
+      <label for="fProvider">AI provider (for photo auto-fill)</label>
+      <select id="fProvider">
+        <option value="gemini">Google Gemini</option>
+        <option value="azure">Azure OpenAI</option>
+      </select>
+    </div>
+    <div id="geminiFields">
+      <div class="field">
+        <label for="fApiKey">Gemini API key</label>
+        <input id="fApiKey" type="password" placeholder="AIza…">
+        <div class="hint">Get a free key at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>.</div>
+      </div>
+    </div>
+    <div id="azureFields" style="display:none">
+      <div class="field">
+        <label for="fAzEndpoint">Azure endpoint</label>
+        <input id="fAzEndpoint" placeholder="https://your-resource.openai.azure.com">
+      </div>
+      <div class="field">
+        <label for="fAzDeployment">Deployment name (vision-capable, e.g. gpt-4o)</label>
+        <input id="fAzDeployment" placeholder="gpt-4o">
+      </div>
+      <div class="field">
+        <label for="fAzKey">Azure API key</label>
+        <input id="fAzKey" type="password" placeholder="key from Azure portal / Foundry">
+      </div>
+    </div>
+    <div class="hint" style="margin-bottom:14px">Keys are stored only in this browser's localStorage and sent only to the provider you chose when you tap auto-fill. Use a personal/dev key, not a work subscription key.</div>
+    <div class="field">
+      <button class="ai-btn" id="testBtn" style="margin-top:0">🔌 Test connection</button>
+      <div class="hint" id="testResult" style="display:none"></div>
+    </div>
+    <div class="field">
+      <label>Danger zone</label>
+      <button class="btn-plain" id="wipeBtn" style="color:#e05c5c">Delete all data from this browser</button>
+    </div>
+    <div class="btns">
+      <button class="btn-plain" id="settingsCloseBtn">Close</button>
+      <button class="btn-primary" id="settingsSaveBtn">Save</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ================= STATE ================= */
+const LS_ENTRIES='wow_entries', LS_THEME='wow_theme', LS_KEY='wow_gemini_key';
+const LS_PROVIDER='wow_ai_provider', LS_AZ_EP='wow_az_endpoint', LS_AZ_DEP='wow_az_deployment', LS_AZ_KEY='wow_az_key';
+let entries=[], view='grid', editingId=null, currentPhoto=null, spotlightId=null;
+
+function load(){ try{ entries=JSON.parse(localStorage.getItem(LS_ENTRIES))||[] }catch(e){ entries=[] } }
+function persist(){
+  try{ localStorage.setItem(LS_ENTRIES, JSON.stringify(entries)) }
+  catch(e){ toast('⚠ Storage full — try smaller photos or export + trim old photos'); }
+}
+const $=id=>document.getElementById(id);
+const fmt=n=>'₹'+Number(n||0).toLocaleString('en-IN');
+const esc=s=>(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtDate=d=>{ if(!d) return ''; const dt=new Date(d+'T00:00:00'); return isNaN(dt)?d:dt.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) };
+
+/* ================= THEME ================= */
+function setTheme(t){
+  document.documentElement.dataset.theme=t;
+  localStorage.setItem(LS_THEME,t);
+  document.querySelectorAll('.theme-dot').forEach(b=>b.classList.toggle('active',b.dataset.setTheme===t));
+}
+document.querySelectorAll('.theme-dot').forEach(b=>b.onclick=()=>setTheme(b.dataset.setTheme));
+setTheme(localStorage.getItem(LS_THEME)||'jazz');
+
+/* ================= RENDER ================= */
+function stats(){
+  $('statCount').textContent=entries.length;
+  let sp=0,gn=0;
+  entries.forEach(e=>{ if(e.moneyType==='spend') sp+=Number(e.amount||0); if(e.moneyType==='gain') gn+=Number(e.amount||0); });
+  $('statSpent').textContent=fmt(sp);
+  $('statGained').textContent=fmt(gn);
+}
+
+function moneyChip(e){
+  if(e.moneyType==='spend') return `<span class="chip money spend">−${fmt(e.amount)} invested</span>`;
+  if(e.moneyType==='gain') return `<span class="chip money gain">+${fmt(e.amount)}</span>`;
+  return '';
+}
+
+function filtered(){
+  const q=$('search').value.trim().toLowerCase();
+  let list=[...entries].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  if(q) list=list.filter(e=>(e.title+' '+e.story+' '+e.category).toLowerCase().includes(q));
+  return list;
+}
+
+function render(){
+  stats(); renderSpotlight();
+  const list=filtered();
+  $('empty').classList.toggle('show',entries.length===0);
+  const grid=$('grid'), tl=$('timeline');
+  grid.style.display = view==='grid' ? '' : 'none';
+  tl.classList.toggle('show', view==='timeline');
+
+  grid.innerHTML=list.map(e=>`
+    <div class="card">
+      ${e.photo?`<img src="${e.photo}" alt="">`:''}
+      <div class="actions">
+        <button onclick="editEntry('${e.id}')">✎</button>
+        <button onclick="delEntry('${e.id}')">🗑</button>
+      </div>
+      <div class="body">
+        <h3>${esc(e.title)}</h3>
+        <div class="story">${esc(e.story)}</div>
+        <div class="meta">
+          <span class="chip cat">${esc(e.category)}</span>
+          ${e.date?`<span class="chip">${fmtDate(e.date)}</span>`:''}
+          ${moneyChip(e)}
+        </div>
+      </div>
+    </div>`).join('');
+
+  tl.innerHTML=list.map(e=>`
+    <div class="t-item">
+      ${e.photo?`<img src="${e.photo}" alt="">`:''}
+      <div class="t-date">${e.date?fmtDate(e.date):'Someday great'}</div>
+      <h3>${esc(e.title)}</h3>
+      <div class="story">${esc(e.story)}</div>
+      <div class="meta"><span class="chip cat">${esc(e.category)}</span>${moneyChip(e)}</div>
+      <div class="actions">
+        <button onclick="editEntry('${e.id}')">edit</button>
+        <button onclick="delEntry('${e.id}')">delete</button>
+      </div>
+    </div>`).join('');
+}
+
+function renderSpotlight(force){
+  const sp=$('spotlight');
+  if(entries.length<2){ sp.classList.remove('show'); return }
+  if(force || !spotlightId || !entries.find(e=>e.id===spotlightId)){
+    const pool=entries.filter(e=>e.id!==spotlightId);
+    spotlightId=pool[Math.floor(Math.random()*pool.length)].id;
+  }
+  const e=entries.find(x=>x.id===spotlightId);
+  sp.classList.add('show');
+  $('spTitle').textContent=e.title;
+  $('spStory').textContent=e.story;
+  $('spMeta').textContent=[e.category, e.date?fmtDate(e.date):null,
+    e.moneyType==='gain'?('+'+fmt(e.amount)):(e.moneyType==='spend'?('invested '+fmt(e.amount)):null)
+  ].filter(Boolean).join(' · ');
+  const img=$('spImg');
+  if(e.photo){ img.src=e.photo; img.style.display='' } else img.style.display='none';
+}
+$('spShuffle').onclick=()=>renderSpotlight(true);
+
+/* ================= VIEW / SEARCH ================= */
+$('viewGrid').onclick=()=>{view='grid';$('viewGrid').classList.add('on');$('viewTimeline').classList.remove('on');render()};
+$('viewTimeline').onclick=()=>{view='timeline';$('viewTimeline').classList.add('on');$('viewGrid').classList.remove('on');render()};
+$('search').oninput=render;
+
+/* ================= ADD / EDIT ================= */
+function openModal(e){
+  editingId=e?e.id:null;
+  currentPhoto=e?e.photo:null;
+  $('modalTitle').textContent=e?'Edit win':'Add a win';
+  $('fTitle').value=e?e.title:'';
+  $('fStory').value=e?e.story:'';
+  $('fDate').value=e?(e.date||''):new Date().toISOString().slice(0,10);
+  $('fCategory').value=e?e.category:'Career';
+  $('fMoneyType').value=e?e.moneyType:'none';
+  $('fAmount').value=e?(e.amount||''):'';
+  $('fAmount').disabled=($('fMoneyType').value==='none');
+  const pv=$('photoPreview');
+  if(currentPhoto){ pv.src=currentPhoto; pv.style.display=''; $('photoHint').textContent='📷 Tap to change photo'; }
+  else { pv.style.display='none'; $('photoHint').textContent='📷 Tap to add a photo (optional)'; }
+  $('aiFillBtn').style.display=currentPhoto?'':'none';
+  $('entryOverlay').classList.add('show');
+}
+$('addBtn').onclick=()=>openModal(null);
+$('cancelBtn').onclick=()=>$('entryOverlay').classList.remove('show');
+$('fMoneyType').onchange=()=>{ $('fAmount').disabled=($('fMoneyType').value==='none'); if($('fAmount').disabled)$('fAmount').value='' };
+
+window.editEntry=id=>openModal(entries.find(e=>e.id===id));
+window.delEntry=id=>{
+  if(!confirm('Remove this win from your wall?')) return;
+  entries=entries.filter(e=>e.id!==id); persist(); render(); toast('Removed.');
+};
+
+$('saveBtn').onclick=()=>{
+  const title=$('fTitle').value.trim();
+  if(!title){ toast('Give your win a title 🙂'); return }
+  const data={
+    title, story:$('fStory').value.trim(), date:$('fDate').value,
+    category:$('fCategory').value, moneyType:$('fMoneyType').value,
+    amount:$('fMoneyType').value==='none'?0:Number($('fAmount').value||0),
+    photo:currentPhoto||null
+  };
+  if(editingId){ Object.assign(entries.find(e=>e.id===editingId), data); toast('Updated ✓'); }
+  else { entries.push({id:'w'+Date.now()+Math.random().toString(36).slice(2,6), ...data}); confetti(); toast('Another win on the wall! 🎉'); }
+  persist(); $('entryOverlay').classList.remove('show'); render();
+};
+
+/* ================= PHOTO (compressed to localStorage) ================= */
+$('photoZone').onclick=()=>$('photoInput').click();
+$('photoInput').onchange=ev=>{
+  const f=ev.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{
+    const img=new Image();
+    img.onload=()=>{
+      const MAX=700, sc=Math.min(1,MAX/Math.max(img.width,img.height));
+      const c=document.createElement('canvas');
+      c.width=Math.round(img.width*sc); c.height=Math.round(img.height*sc);
+      c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+      currentPhoto=c.toDataURL('image/jpeg',0.72);
+      const pv=$('photoPreview'); pv.src=currentPhoto; pv.style.display='';
+      $('photoHint').textContent='📷 Tap to change photo';
+      $('aiFillBtn').style.display='';
+    };
+    img.src=r.result;
+  };
+  r.readAsDataURL(f);
+  ev.target.value='';
+};
+
+/* ================= AI AUTO-FILL (Gemini / Azure OpenAI) ================= */
+const AI_PROMPT="This photo shows a personal achievement (certificate, award, event, garden, purchase, etc). Respond ONLY with raw JSON, no markdown: {\"title\": short proud achievement title (max 10 words), \"story\": one warm sentence describing it in first person, \"date\": \"YYYY-MM-DD\" if a date is visible else \"\", \"category\": one of [Career, Learning, Money, Family, Health, Travel, Garden, Personal, Other]}";
+
+async function callGemini(b64){
+  const key=localStorage.getItem(LS_KEY);
+  if(!key) throw {friendly:'Add your Gemini API key in ⚙ Settings first'};
+  const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(key)}`,{
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({contents:[{parts:[
+      {text:AI_PROMPT},
+      {inline_data:{mime_type:'image/jpeg', data:b64}}
+    ]}]})
+  });
+  if(!res.ok) throw new Error('Gemini API '+res.status);
+  const data=await res.json();
+  return (data.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('');
+}
+
+async function callAzure(dataUrl){
+  const ep=(localStorage.getItem(LS_AZ_EP)||'').replace(/\/+$/,'');
+  const dep=localStorage.getItem(LS_AZ_DEP), key=localStorage.getItem(LS_AZ_KEY);
+  if(!ep||!dep||!key) throw {friendly:'Fill Azure endpoint, deployment & key in ⚙ Settings first'};
+  const res=await fetch(`${ep}/openai/deployments/${encodeURIComponent(dep)}/chat/completions?api-version=2024-06-01`,{
+    method:'POST', headers:{'Content-Type':'application/json','api-key':key},
+    body:JSON.stringify({
+      max_tokens:300,
+      messages:[{role:'user',content:[
+        {type:'text',text:AI_PROMPT},
+        {type:'image_url',image_url:{url:dataUrl}}
+      ]}]
+    })
+  });
+  if(!res.ok) throw new Error('Azure API '+res.status);
+  const data=await res.json();
+  return data.choices?.[0]?.message?.content||'';
+}
+
+$('aiFillBtn').onclick=async()=>{
+  if(!currentPhoto){ toast('Add a photo first'); return }
+  const provider=localStorage.getItem(LS_PROVIDER)||'gemini';
+  const btn=$('aiFillBtn'); btn.disabled=true; btn.textContent='✨ Reading your photo…';
+  try{
+    const text = provider==='azure'
+      ? await callAzure(currentPhoto)
+      : await callGemini(currentPhoto.split(',')[1]);
+    const parsed=JSON.parse(text.replace(/```json|```/g,'').trim());
+    if(parsed.title) $('fTitle').value=parsed.title;
+    if(parsed.story) $('fStory').value=parsed.story;
+    if(parsed.date && /^\d{4}-\d{2}-\d{2}$/.test(parsed.date)) $('fDate').value=parsed.date;
+    if(parsed.category){ const sel=$('fCategory'); if([...sel.options].some(o=>o.value===parsed.category)) sel.value=parsed.category; }
+    toast('Auto-filled — tweak & save ✨');
+  }catch(err){
+    console.error(err);
+    toast(err.friendly||'Auto-fill failed — check your settings / network');
+  }
+  btn.disabled=false; setAiBtnLabel();
+};
+
+function setAiBtnLabel(){
+  const p=localStorage.getItem(LS_PROVIDER)||'gemini';
+  $('aiFillBtn').textContent = p==='azure' ? '✨ Auto-fill from photo (Azure OpenAI)' : '✨ Auto-fill from photo (Gemini)';
+}
+
+/* ================= TEST CONNECTION ================= */
+function explainErr(status){
+  if(status===401||status===403) return 'Key rejected (401/403) — wrong or expired API key.';
+  if(status===404) return 'Not found (404) — check endpoint URL / deployment name spelling.';
+  if(status===429) return 'Rate limited (429) — key works, but quota exhausted right now.';
+  return 'API returned '+status+'.';
+}
+$('testBtn').onclick=async()=>{
+  const p=$('fProvider').value;
+  const btn=$('testBtn'), out=$('testResult');
+  btn.disabled=true; btn.textContent='🔌 Testing…';
+  out.style.display=''; out.style.color='var(--muted)'; out.textContent='Contacting '+(p==='azure'?'Azure OpenAI':'Gemini')+'…';
+  const t0=performance.now();
+  try{
+    let res;
+    if(p==='azure'){
+      const ep=$('fAzEndpoint').value.trim().replace(/\/+$/,'');
+      const dep=$('fAzDeployment').value.trim(), key=$('fAzKey').value.trim();
+      if(!ep||!dep||!key) throw {friendly:'Fill endpoint, deployment and key first.'};
+      if(!/^https:\/\//.test(ep)) throw {friendly:'Endpoint must start with https://'};
+      res=await fetch(`${ep}/openai/deployments/${encodeURIComponent(dep)}/chat/completions?api-version=2024-06-01`,{
+        method:'POST', headers:{'Content-Type':'application/json','api-key':key},
+        body:JSON.stringify({max_tokens:5,messages:[{role:'user',content:'Reply with OK'}]})
+      });
+    }else{
+      const key=$('fApiKey').value.trim();
+      if(!key) throw {friendly:'Enter your Gemini API key first.'};
+      res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(key)}`,{
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({contents:[{parts:[{text:'Reply with OK'}]}]})
+      });
+    }
+    const ms=Math.round(performance.now()-t0);
+    if(!res.ok) throw {friendly:'❌ '+explainErr(res.status)};
+    const data=await res.json();
+    const reply = p==='azure'
+      ? (data.choices?.[0]?.message?.content||'')
+      : (data.candidates?.[0]?.content?.parts||[]).map(x=>x.text||'').join('');
+    const model = p==='azure' ? (data.model||$('fAzDeployment').value.trim()) : 'gemini-2.0-flash';
+    out.style.color='var(--gain)';
+    out.textContent=`✅ Connected in ${ms}ms · model: ${model} · replied: "${reply.trim().slice(0,40)}"`;
+  }catch(err){
+    console.error(err);
+    out.style.color='var(--spend)';
+    out.textContent = err.friendly ||
+      '❌ Network/CORS error — endpoint unreachable from browser. If Azure: resource may be behind APIM/private endpoint, or URL is wrong.';
+  }
+  btn.disabled=false; btn.textContent='🔌 Test connection';
+};
+
+/* ================= SETTINGS ================= */
+function syncProviderFields(){
+  const p=$('fProvider').value;
+  $('geminiFields').style.display = p==='gemini' ? '' : 'none';
+  $('azureFields').style.display = p==='azure' ? '' : 'none';
+}
+$('fProvider').onchange=syncProviderFields;
+$('settingsBtn').onclick=()=>{
+  $('fProvider').value=localStorage.getItem(LS_PROVIDER)||'gemini';
+  $('fApiKey').value=localStorage.getItem(LS_KEY)||'';
+  $('fAzEndpoint').value=localStorage.getItem(LS_AZ_EP)||'';
+  $('fAzDeployment').value=localStorage.getItem(LS_AZ_DEP)||'';
+  $('fAzKey').value=localStorage.getItem(LS_AZ_KEY)||'';
+  syncProviderFields();
+  $('settingsOverlay').classList.add('show');
+};
+$('settingsCloseBtn').onclick=()=>$('settingsOverlay').classList.remove('show');
+$('settingsSaveBtn').onclick=()=>{
+  localStorage.setItem(LS_PROVIDER,$('fProvider').value);
+  const pairs=[[LS_KEY,'fApiKey'],[LS_AZ_EP,'fAzEndpoint'],[LS_AZ_DEP,'fAzDeployment'],[LS_AZ_KEY,'fAzKey']];
+  pairs.forEach(([ls,id])=>{
+    const v=$(id).value.trim();
+    if(v) localStorage.setItem(ls,v); else localStorage.removeItem(ls);
+  });
+  setAiBtnLabel();
+  $('settingsOverlay').classList.remove('show'); toast('Settings saved ✓');
+};
+$('wipeBtn').onclick=()=>{
+  if(!confirm('This deletes ALL wins from this browser. Have you taken a Backup?')) return;
+  if(!confirm('Really sure? This cannot be undone.')) return;
+  entries=[]; persist(); render(); $('settingsOverlay').classList.remove('show'); toast('Wall cleared.');
+};
+
+/* ================= BACKUP / RESTORE ================= */
+$('exportBtn').onclick=()=>{
+  const blob=new Blob([JSON.stringify(entries,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='wall-of-wins-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click(); URL.revokeObjectURL(a.href);
+  toast('Backup downloaded ✓');
+};
+$('importBtn').onclick=()=>$('importFile').click();
+$('importFile').onchange=ev=>{
+  const f=ev.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const data=JSON.parse(r.result);
+      if(!Array.isArray(data)) throw 0;
+      const ids=new Set(entries.map(e=>e.id));
+      let added=0;
+      data.forEach(e=>{ if(e && e.title && !ids.has(e.id)){ entries.push(e); added++; } });
+      persist(); render(); toast(added+' wins restored ✓');
+    }catch(e){ toast('That file doesn\'t look like a Wall of Wins backup'); }
+  };
+  r.readAsText(f);
+  ev.target.value='';
+};
+
+/* ================= CONFETTI ================= */
+function confetti(){
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const cv=$('confetti'), ctx=cv.getContext('2d');
+  cv.width=innerWidth; cv.height=innerHeight;
+  const theme=document.documentElement.dataset.theme;
+  const colors=theme==='trophy'?['#d4af37','#f1d576','#fff6d8','#b58f1f']
+             :theme==='sunshine'?['#f27649','#f7a23b','#2fa87a','#4aa8d8','#e35b8f']
+             :['#ff4f9a','#ffb347','#5fe3b3','#9d6bff','#fff'];
+  const parts=Array.from({length:130},()=>({
+    x:innerWidth/2+(Math.random()-.5)*220, y:innerHeight*0.35,
+    vx:(Math.random()-.5)*11, vy:-Math.random()*11-4,
+    s:Math.random()*7+4, r:Math.random()*Math.PI, vr:(Math.random()-.5)*.3,
+    c:colors[Math.floor(Math.random()*colors.length)], life:1
+  }));
+  let t0=performance.now();
+  (function tick(t){
+    const done=(t-t0)>2400;
+    ctx.clearRect(0,0,cv.width,cv.height);
+    parts.forEach(p=>{
+      p.x+=p.vx; p.y+=p.vy; p.vy+=.28; p.r+=p.vr; p.life-=.005;
+      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.r);
+      ctx.globalAlpha=Math.max(0,p.life);
+      ctx.fillStyle=p.c; ctx.fillRect(-p.s/2,-p.s/2,p.s,p.s*0.6);
+      ctx.restore();
+    });
+    if(!done) requestAnimationFrame(tick); else ctx.clearRect(0,0,cv.width,cv.height);
+  })(t0);
+}
+
+/* ================= INIT ================= */
+load(); render(); setAiBtnLabel();
+</script>
+</body>
+</html>
