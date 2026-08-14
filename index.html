@@ -704,6 +704,7 @@ $('testBtn').onclick=async()=>{
     const model = p==='azure' ? (data.model||$('fAzDeployment').value.trim()) : 'gemini-2.0-flash';
     out.style.color='var(--gain)';
     out.textContent=`✅ Connected in ${ms}ms · model: ${model} · replied: "${reply.trim().slice(0,40)}"`;
+    if(saveSettings()) out.textContent+=' · saved ✓';
   }catch(err){
     console.error(err);
     out.style.color='var(--spend)';
@@ -714,6 +715,27 @@ $('testBtn').onclick=async()=>{
 };
 
 /* ================= SETTINGS ================= */
+function saveSettings(){
+  try{
+    localStorage.setItem(LS_PROVIDER,$('fProvider').value);
+    const pairs=[[LS_KEY,'fApiKey'],[LS_AZ_EP,'fAzEndpoint'],[LS_AZ_DEP,'fAzDeployment'],[LS_AZ_KEY,'fAzKey']];
+    pairs.forEach(([ls,id])=>{
+      const v=$(id).value.trim();
+      if(v) localStorage.setItem(ls,v); else localStorage.removeItem(ls);
+    });
+    /* read-back verification: confirm it actually landed */
+    if(localStorage.getItem(LS_PROVIDER)!==$('fProvider').value) throw new Error('read-back mismatch');
+    setAiBtnLabel();
+    return true;
+  }catch(e){
+    console.error(e);
+    toast('⚠ Could not save — this browser is blocking storage (private mode / sandboxed preview?)');
+    return false;
+  }
+}
+$('settingsSaveBtn').onclick=()=>{
+  if(saveSettings()){ $('settingsOverlay').classList.remove('show'); toast('Settings saved ✓'); }
+};
 function syncProviderFields(){
   const p=$('fProvider').value;
   $('geminiFields').style.display = p==='gemini' ? '' : 'none';
@@ -730,16 +752,6 @@ $('settingsBtn').onclick=()=>{
   $('settingsOverlay').classList.add('show');
 };
 $('settingsCloseBtn').onclick=()=>$('settingsOverlay').classList.remove('show');
-$('settingsSaveBtn').onclick=()=>{
-  localStorage.setItem(LS_PROVIDER,$('fProvider').value);
-  const pairs=[[LS_KEY,'fApiKey'],[LS_AZ_EP,'fAzEndpoint'],[LS_AZ_DEP,'fAzDeployment'],[LS_AZ_KEY,'fAzKey']];
-  pairs.forEach(([ls,id])=>{
-    const v=$(id).value.trim();
-    if(v) localStorage.setItem(ls,v); else localStorage.removeItem(ls);
-  });
-  setAiBtnLabel();
-  $('settingsOverlay').classList.remove('show'); toast('Settings saved ✓');
-};
 $('wipeBtn').onclick=()=>{
   if(!confirm('This deletes ALL wins from this browser. Have you taken a Backup?')) return;
   if(!confirm('Really sure? This cannot be undone.')) return;
@@ -804,6 +816,15 @@ function confetti(){
 }
 
 /* ================= INIT ================= */
+(function storageCheck(){
+  try{
+    localStorage.setItem('wow_probe','1');
+    if(localStorage.getItem('wow_probe')!=='1') throw 0;
+    localStorage.removeItem('wow_probe');
+  }catch(e){
+    setTimeout(()=>toast('⚠ Storage is blocked here — nothing will persist. Open this file in a normal browser tab (not a preview / private mode).'),600);
+  }
+})();
 load(); render(); setAiBtnLabel();
 </script>
 </body>
